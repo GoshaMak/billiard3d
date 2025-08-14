@@ -1,0 +1,89 @@
+package org.wocy
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import javafx.application.Application
+import javafx.scene.Scene
+import javafx.scene.layout.HBox
+import javafx.stage.Stage
+import org.wocy.model.BowlingBall
+import org.wocy.ui.CanvasPanel
+import org.wocy.ui.ControlPanel
+
+class BilliardApp : Application() {
+    private val logger = KotlinLogging.logger {}
+    lateinit var canvasPanel: CanvasPanel
+    lateinit var controlPanel: ControlPanel
+    lateinit var loop: BilliardLoop
+
+    override fun init() {
+        logger.info { "init" }
+        // screen: Rectangle2D [minX=0.0, minY=0.0, maxX=1536.0, maxY=864.0, width=1536.0, height=864.0]
+
+        val canvasWidth = 800.0
+        val canvasHeight = 600.0
+        canvasPanel = CanvasPanel(canvasWidth, canvasHeight)
+        controlPanel = ControlPanel(10.0)
+
+        configureListeners()
+    }
+
+    private fun configureListeners() {
+        controlPanel.strikeBallButton.setOnAction {
+            val ind = controlPanel.strikeBallSpinner.value - 1
+            val force = controlPanel.strikeBallForceSpinner.value.toFloat()
+            val angle = controlPanel.strikeBallAngleSpinner.value
+            (loop.models[ind] as BowlingBall).cueHit(force, angle)
+        }
+        controlPanel.moveLeftButton.setOnAction {
+            loop.camera.moveLeft()
+            //logger.info { "${loop.camera}" }
+        }
+        controlPanel.moveRightButton.setOnAction {
+            loop.camera.moveRight()
+            //logger.info { "${loop.camera}" }
+        }
+        controlPanel.moveBackwardButton.setOnAction {
+            loop.camera.moveBackward()
+            //logger.info { "${loop.camera}" }
+        }
+        controlPanel.moveForwardButton.setOnAction {
+            loop.camera.moveForward()
+            //logger.info { "${loop.camera}" }
+        }
+        controlPanel.moveDownwardButton.setOnAction {
+            loop.camera.moveDownward()
+            //logger.info { "${loop.camera}" }
+        }
+        controlPanel.moveUpwardButton.setOnAction {
+            loop.camera.moveUpward()
+            //logger.info { "${loop.camera}" }
+        }
+
+        controlPanel.rotateOXButton.setOnAction {
+            val deg = controlPanel.rotateOXSpinner.value.toFloat()
+            loop.camera.rotateOX(deg)
+            //logger.info { "${loop.camera}" }
+        }
+        controlPanel.rotateOYButton.setOnAction {
+            val deg = controlPanel.rotateOYSpinner.value.toFloat()
+            loop.camera.rotateOY(deg)
+            //logger.info { "${loop.camera}" }
+        }
+        controlPanel.rotateOZButton.setOnAction {
+            val deg = controlPanel.rotateOZSpinner.value.toFloat()
+            loop.camera.rotateOZ(deg)
+            //logger.info { "${loop.camera}" }
+        }
+    }
+
+    override fun start(stage: Stage) {
+        logger.info { "starting billiard" }
+
+        stage.title = "3D Billiard"
+        stage.scene = Scene(HBox(controlPanel, canvasPanel))
+        stage.show()
+
+        loop = BilliardLoop(canvasPanel.graphicsContext2D, canvasPanel.width.toInt(), canvasPanel.height.toInt())
+                .apply { start() }
+    }
+}
