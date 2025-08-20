@@ -18,7 +18,7 @@ class ControlPanel : VBox {
         isEditable = true
     }
     val strikeBallForceSpinner = Spinner<Int>().apply {
-        valueFactory = SpinnerValueFactory.IntegerSpinnerValueFactory(0, 1000, 0, 100)
+        valueFactory = SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20000, 0, 100)
         isEditable = true
     }
     val moveLeftButton = Button("←")
@@ -28,15 +28,15 @@ class ControlPanel : VBox {
     val moveDownwardButton = Button("↓")
     val moveUpwardButton = Button("↑")
     val rotateOXSpinner = Spinner<Double>().apply {
-        valueFactory = SpinnerValueFactory.DoubleSpinnerValueFactory(-1000.0, 1000.0, 0.0)
+        valueFactory = SpinnerValueFactory.DoubleSpinnerValueFactory(-1000.0, 1000.0, 0.0, 15.0)
         isEditable = true
     }
     val rotateOYSpinner = Spinner<Double>().apply {
-        valueFactory = SpinnerValueFactory.DoubleSpinnerValueFactory(-1000.0, 1000.0, 0.0)
+        valueFactory = SpinnerValueFactory.DoubleSpinnerValueFactory(-1000.0, 1000.0, 0.0, 15.0)
         isEditable = true
     }
     val rotateOZSpinner = Spinner<Double>().apply {
-        valueFactory = SpinnerValueFactory.DoubleSpinnerValueFactory(-1000.0, 1000.0, 0.0)
+        valueFactory = SpinnerValueFactory.DoubleSpinnerValueFactory(-1000.0, 1000.0, 0.0, 15.0)
         isEditable = true
     }
     val rotateOXButton = Button("Rotate OX")

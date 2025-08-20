@@ -1,8 +1,6 @@
 package org.wocy
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import javafx.scene.canvas.GraphicsContext
-import javafx.scene.image.PixelFormat
 import javafx.scene.paint.Color
 import kotlinx.coroutines.*
 import org.wocy.camera.Camera
@@ -35,7 +33,7 @@ class Renderer(
         scope.cancel()
     }
 
-    suspend fun render() : IntArray {
+    suspend fun render(): IntArray {
         (0 until screenHeight).map { py ->
             scope.launch {
                 for (px in 0 until screenWidth) {

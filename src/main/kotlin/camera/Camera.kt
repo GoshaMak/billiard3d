@@ -1,6 +1,6 @@
 package org.wocy.camera
 
-import org.wocy.primitive.Mat44f
+import org.wocy.primitive.Mat4f
 import org.wocy.primitive.Vec3f
 
 abstract class Camera(
@@ -26,20 +26,12 @@ abstract class Camera(
         abstract var height: Int
     */
 ) {
-    protected var cameraToWorld: Mat44f = Mat44f(right, up, forward, position)
-    /*
-        protected var cameraToWorld: Mat44f = Mat44f(
-            Vec3f(1f, 0f, 0f),
-            Vec3f(0f, 1f, 0f),
-            Vec3f(0f, 0f, -1f),
-            Vec3f(0f, 3f, 0f),
-        )
-    */
+    protected var cameraToWorld: Mat4f = Mat4f(right, up, forward, position)
 
     abstract fun generateRay(px: Int, py: Int, screenWidth: Int, screenHeight: Int): Ray
 
     fun move(dx: Float, dy: Float, dz: Float) {
-        cameraToWorld = Mat44f.translation(dx, dy, dz) * cameraToWorld
+        cameraToWorld = Mat4f.translation(dx, dy, dz) * cameraToWorld
     }
 
     fun moveLeft() {
@@ -67,15 +59,45 @@ abstract class Camera(
     }
 
     fun rotateOX(deg: Float) {
-        cameraToWorld = Mat44f.rotationOX(deg) * cameraToWorld
+        cameraToWorld = Mat4f.rotationOX(deg) * cameraToWorld
     }
 
     fun rotateOY(deg: Float) {
-        cameraToWorld = Mat44f.rotationOY(deg) * cameraToWorld
+        cameraToWorld = Mat4f.rotationOY(deg) * cameraToWorld
     }
 
     fun rotateOZ(deg: Float) {
-        cameraToWorld = Mat44f.rotationOZ(deg) * cameraToWorld
+        cameraToWorld = Mat4f.rotationOZ(deg) * cameraToWorld
+    }
+
+    fun rotateAroundUp(deg: Float) {
+        up = Vec3f(cameraToWorld[1, 0], cameraToWorld[1, 1], cameraToWorld[1, 2])
+        forward = Vec3f(-cameraToWorld[2, 0], -cameraToWorld[2, 1], -cameraToWorld[2, 2]).apply { normalize() }
+        forward = rotateAroundAxis(forward, up, Math.toRadians(deg.toDouble()))
+        forward.normalize()
+        val right = forward.cross(up).apply { normalize() }
+        cameraToWorld(right, up, forward)
+    }
+
+    fun rotateAroundRight(deg: Float) {
+        forward = Vec3f(-cameraToWorld[2, 0], -cameraToWorld[2, 1], -cameraToWorld[2, 2]).apply { normalize() }
+        up = Vec3f(cameraToWorld[1, 0], cameraToWorld[1, 1], cameraToWorld[1, 2])
+        val right = forward.cross(up).apply { normalize() }
+        forward = rotateAroundAxis(forward, right, Math.toRadians(deg.toDouble()))
+        up = rotateAroundAxis(up, right, Math.toRadians(deg.toDouble()))
+
+        forward.normalize()
+        up.normalize()
+        right.normalize()
+        cameraToWorld(right, up, forward)
+    }
+
+    private fun rotateAroundAxis(v: Vec3f, axisRaw: Vec3f, angleRad: Double): Vec3f {
+        val a = Vec3f.normalized(axisRaw)
+        val c = kotlin.math.cos(angleRad).toFloat()
+        val s = kotlin.math.sin(angleRad).toFloat()
+        // Rodrigues: v' = v c + (a×v) s + a (a·v)(1−c)
+        return v * c + a.cross(v) * s + a * (a.dot(v) * (1f - c))
     }
 
     override fun toString(): String {

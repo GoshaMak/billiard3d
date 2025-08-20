@@ -1,12 +1,12 @@
 package org.wocy.light
 
 import javafx.scene.paint.Color
-import org.wocy.primitive.Mat44f
+import org.wocy.primitive.Mat4f
 import org.wocy.primitive.Vec3f
 
 // not affected by translation
 class DistantLight(
-    lightToWorld: Mat44f,
+    lightToWorld: Mat4f,
     color: Color, // The RGB color of the light (values range from [0,1]).
     intensity: Float, // probably 0..1
 ) : Light(lightToWorld, color, intensity) {
@@ -22,16 +22,16 @@ class DistantLight(
 
     override fun rotateOX(deg: Float) {
         super.rotateOX(deg)
-        direction.timesAssign(Mat44f.rotationOX(deg))
+        direction.timesAssign(Mat4f.rotationOX(deg))
     }
 
     override fun rotateOY(deg: Float) {
         super.rotateOY(deg)
-        direction.timesAssign(Mat44f.rotationOY(deg))
+        direction.timesAssign(Mat4f.rotationOY(deg))
     }
 
     override fun rotateOZ(deg: Float) {
         super.rotateOZ(deg)
-        direction.timesAssign(Mat44f.rotationOZ(deg))
+        direction.timesAssign(Mat4f.rotationOZ(deg))
     }
 }

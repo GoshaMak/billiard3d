@@ -4,10 +4,10 @@ import java.lang.Math.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
-// think about storing it as transposed to optimize cache loads while multiplication
-class Mat44f {
+// think about storing it as transposed to optimize cache loads during multiplication
+class Mat4f {
     companion object {
-        fun identity(): Mat44f {
+        fun identity(): Mat4f {
             val mtr = FloatArray(16) { i: Int ->
                 when (i) {
                     0, 5, 10, 15 -> 1.0f
@@ -15,10 +15,10 @@ class Mat44f {
                 }
             }
 
-            return Mat44f(mtr)
+            return Mat4f(mtr)
         }
 
-        fun translation(x: Float, y: Float, z: Float): Mat44f {
+        fun translation(x: Float, y: Float, z: Float): Mat4f {
             val mtr = FloatArray(16) { i: Int ->
                 when (i) {
                     0, 5, 10, 15 -> 1.0f
@@ -29,10 +29,10 @@ class Mat44f {
                 }
             }
 
-            return Mat44f(mtr)
+            return Mat4f(mtr)
         }
 
-        fun rotationOX(deg: Float): Mat44f {
+        fun rotationOX(deg: Float): Mat4f {
             val sin_ = sin(toRadians(deg.toDouble())).toFloat()
             val cos_ = cos(toRadians(deg.toDouble())).toFloat()
             val mtr = FloatArray(16) { i: Int ->
@@ -46,10 +46,10 @@ class Mat44f {
                 }
             }
 
-            return Mat44f(mtr)
+            return Mat4f(mtr)
         }
 
-        fun rotationOY(deg: Float): Mat44f {
+        fun rotationOY(deg: Float): Mat4f {
             val sin_ = sin(toRadians(deg.toDouble())).toFloat()
             val cos_ = cos(toRadians(deg.toDouble())).toFloat()
             val mtr = FloatArray(16) { i: Int ->
@@ -63,10 +63,10 @@ class Mat44f {
                 }
             }
 
-            return Mat44f(mtr)
+            return Mat4f(mtr)
         }
 
-        fun rotationOZ(deg: Float): Mat44f {
+        fun rotationOZ(deg: Float): Mat4f {
             val sin_ = sin(toRadians(deg.toDouble())).toFloat()
             val cos_ = cos(toRadians(deg.toDouble())).toFloat()
             val mtr = FloatArray(16) { i: Int ->
@@ -80,10 +80,10 @@ class Mat44f {
                 }
             }
 
-            return Mat44f(mtr)
+            return Mat4f(mtr)
         }
 
-        fun scale(sx: Float, sy: Float, sz: Float): Mat44f {
+        fun scale(sx: Float, sy: Float, sz: Float): Mat4f {
             val mtr = FloatArray(16) { i: Int ->
                 when (i) {
                     0    -> sx
@@ -94,7 +94,7 @@ class Mat44f {
                 }
             }
 
-            return Mat44f(mtr)
+            return Mat4f(mtr)
         }
     }
 
@@ -136,8 +136,8 @@ class Mat44f {
         mtr[i * size + j] = value
     }
 
-    operator fun times(o: Mat44f): Mat44f {
-        val res = Mat44f()
+    operator fun times(o: Mat4f): Mat4f {
+        val res = Mat4f()
         for (i in 0 until size) {
             for (j in 0 until size) {
                 res[i, j] = 0.0f
@@ -147,5 +147,45 @@ class Mat44f {
             }
         }
         return res
+    }
+
+    operator fun invoke(right: Vec3f, up: Vec3f, forward: Vec3f) {
+        mtr[0] = right.x
+        mtr[1] = right.y
+        mtr[2] = right.z
+        mtr[4] = up.x
+        mtr[5] = up.y
+        mtr[6] = up.z
+        mtr[8] = -forward.x
+        mtr[9] = -forward.y
+        mtr[10] = -forward.z
+        //        mtr[12] = position.x
+        //        mtr[13] = position.y
+        //        mtr[14] = position.z
+
+        mtr[3] = 0f
+        mtr[7] = 0f
+        mtr[11] = 0f
+        mtr[15] = 1.0f
+    }
+
+    operator fun invoke(right: Vec3f, up: Vec3f, forward: Vec3f, position: Vec3f) {
+        mtr[0] = right.x
+        mtr[1] = right.y
+        mtr[2] = right.z
+        mtr[4] = up.x
+        mtr[5] = up.y
+        mtr[6] = up.z
+        mtr[8] = -forward.x
+        mtr[9] = -forward.y
+        mtr[10] = -forward.z
+        mtr[12] = position.x
+        mtr[13] = position.y
+        mtr[14] = position.z
+
+        mtr[3] = 0f
+        mtr[7] = 0f
+        mtr[11] = 0f
+        mtr[15] = 1.0f
     }
 }

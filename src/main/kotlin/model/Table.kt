@@ -6,26 +6,130 @@ import org.wocy.primitive.Vec2f
 import org.wocy.primitive.Vec3f
 import org.wocy.primitive.Vertex
 import kotlin.math.abs
+import kotlin.math.max
 
 // 4 x 3 meters
 class Table(
     color: Color,
     val length: Float,
     val width: Float,
+    val borderHeight: Float,
 ) : BaseModel(color, 0.18f, Float.MAX_VALUE, Vec2f()) {
-    val p0 = Vec3f(-width / 2f, 0f, length / 2f)
-    val p1 = Vec3f(width / 2f, 0f, length / 2f)
-    val p2 = Vec3f(width / 2f, 0f, -length / 2f)
-    val p3 = Vec3f(-width / 2f, 0f, -length / 2f)
+    private val vertices = listOf<Vec3f>(
+        // поверхность, по которой катаются шары
+        Vec3f(-width / 2f, 0f, length / 2f),
+        Vec3f(width / 2f, 0f, length / 2f),
+        Vec3f(width / 2f, 0f, -length / 2f),
+        Vec3f(-width / 2f, 0f, -length / 2f),
+
+        // левый бортик
+        Vec3f(-width / 2f, borderHeight, length / 2f),
+        Vec3f(-width / 2f, 0f, length / 2f),
+        Vec3f(-width / 2f, 0f, -length / 2f),
+        Vec3f(-width / 2f, borderHeight, -length / 2f),
+
+        // правый бортик
+        Vec3f(width / 2f, borderHeight, -length / 2f),
+        Vec3f(width / 2f, 0f, -length / 2f),
+        Vec3f(width / 2f, 0f, length / 2f),
+        Vec3f(width / 2f, borderHeight, length / 2f),
+
+        // ближний бортик
+        Vec3f(width / 2f, borderHeight, length / 2f),
+        Vec3f(width / 2f, 0f, length / 2f),
+        Vec3f(-width / 2f, 0f, length / 2f),
+        Vec3f(-width / 2f, borderHeight, length / 2f),
+
+        // дальний бортик
+        Vec3f(-width / 2f, borderHeight, -length / 2f),
+        Vec3f(-width / 2f, 0f, -length / 2f),
+        Vec3f(width / 2f, 0f, -length / 2f),
+        Vec3f(width / 2f, borderHeight, -length / 2f),
+    )
+    private val center = Vec3f(0f, borderHeight / 2f, 0f)
+    private val radius = max(width / 2f, max(length / 2f, borderHeight / 2f))
+    private val radius2 = radius * radius
+
+    override fun collide(o: BaseModel) {
+        if (o !is BowlingBall) {
+            return
+        }
+        if (o.center.x - o.radius <= -width / 2f) {
+            if (o.velocity.y < 0f) {
+                o.velocity.y *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        } else if (o.center.x + o.radius >= width / 2f) {
+            if (o.velocity.y > 0f) {
+                o.velocity.y *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        }
+        if (o.center.z - o.radius <= -length / 2f) {
+            if (o.velocity.x < 0f) {
+                o.velocity.x *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        } else if (o.center.z + o.radius >= length / 2f) {
+            if (o.velocity.x > 0f) {
+                o.velocity.x *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        }
+    }
 
     override fun intersect(ray: Ray): Vertex? {
-        val pos = rayIntersectsTriangle(ray, p0, p1, p2)
-                ?: rayIntersectsTriangle(ray, p2, p3, p0)
+        /*
+                if (!isIntersectsSphere(ray)) {
+                    return null
+                }
+        */
+        var pos: Vec3f? = null
+        var ind = -1
+        var minDistance = Float.MAX_VALUE
+        var dist: Float
+        for (i in 0 until vertices.size step 4) {
+            val tmp1 = rayIntersectsTriangle(ray, vertices[i], vertices[i + 1], vertices[i + 2])
+            if (tmp1 != null) {
+                dist = Vec3f.squaredLength(ray.origin, tmp1)
+                if (dist < minDistance) {
+                    minDistance = dist
+                    pos = tmp1
+                    ind = i
+                }
+            }
+            val tmp2 = rayIntersectsTriangle(ray, vertices[i], vertices[i + 2], vertices[i + 3])
+            if (tmp2 != null) {
+                dist = Vec3f.squaredLength(ray.origin, tmp2)
+                if (dist < minDistance) {
+                    minDistance = dist
+                    pos = tmp2
+                    ind = i
+                }
+            }
+        }
         if (pos == null) {
             return null
         }
-        val n = (p1 - p0).cross(p2 - p1).apply { normalize() }
+        val n = (vertices[ind + 1] - vertices[ind]).cross(vertices[ind + 3] - vertices[ind]).apply { normalize() }
         return Vertex(pos, n)
+    }
+
+    private fun isIntersectsSphere(ray: Ray): Boolean {
+        val oc = ray.origin - center
+        if (oc.squaredLength() <= radius2) { // ray inside sphere
+            return true
+        }
+        val a = ray.direction.dot(ray.direction)
+        val b = 2.0 * oc.dot(ray.direction)
+        val c = oc.dot(oc) - radius2
+        val d = b * b - 4 * a * c
+
+        // пересечения нет
+        if (d < 0.0) {
+            return false
+        }
+        return true
     }
 
     private fun rayIntersectsTriangle(ray: Ray, v0: Vec3f, v1: Vec3f, v2: Vec3f): Vec3f? {
@@ -78,5 +182,5 @@ class Table(
         return P // The ray hits the triangle
     }
 
-    override fun update(dt: Double) {}
+    override fun updatePosition(dt: Double) {}
 }

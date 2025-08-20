@@ -1,13 +1,7 @@
 package org.wocy.model
 
 interface Collideable {
-    fun collide(obj: BaseModel) {
-        if (!isColliding(obj)) {
-            return
-        }
-    }
+    fun collide(o: BaseModel)
 
-    private fun isColliding(obj: BaseModel): Boolean {
-        return false
-    }
+    fun isColliding(o: BaseModel): Boolean = false
 }

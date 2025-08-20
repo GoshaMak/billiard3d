@@ -11,5 +11,5 @@ abstract class BaseModel(
 ) : Intersectable, Collideable {
     val velocity = velocity
 
-    abstract fun update(dt: Double)
+    abstract fun updatePosition(dt: Double)
 }

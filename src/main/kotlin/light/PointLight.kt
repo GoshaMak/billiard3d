@@ -1,13 +1,13 @@
 package org.wocy.light
 
 import javafx.scene.paint.Color
-import org.wocy.primitive.Mat44f
+import org.wocy.primitive.Mat4f
 import org.wocy.primitive.Vec3f
 import kotlin.math.min
 
 // not affected by rotation
 class PointLight(
-    lightToWorld: Mat44f,
+    lightToWorld: Mat4f,
     color: Color,
     intensity: Float,
 ) : Light(lightToWorld, color, intensity) {
@@ -24,7 +24,7 @@ class PointLight(
     // WARNING was done before figuring out camera matrix fields
     override fun translate(dx: Float, dy: Float, dz: Float) {
         super.translate(dx, dy, dz)
-        position.timesAssign(Mat44f.translation(dx, dy, dz))
+        position.timesAssign(Mat4f.translation(dx, dy, dz))
     }
 
     override fun rotateOX(deg: Float) {}

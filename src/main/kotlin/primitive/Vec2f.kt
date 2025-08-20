@@ -1,5 +1,6 @@
 package org.wocy.primitive
 
+import kotlin.math.acos
 import kotlin.math.sqrt
 
 class Vec2f(
@@ -7,7 +8,8 @@ class Vec2f(
     var y: Float,
 ) {
     companion object {
-        private val EPSILON = 1e-8
+        val EPSILON = 1e-8
+
         fun normalized(vec: Vec2f): Vec2f {
             val len = vec.length()
             return Vec2f(vec.x / len, vec.y / len)
@@ -58,7 +60,16 @@ class Vec2f(
         y *= other.y
     }
 
+    operator fun times(other: Mat2f): Vec2f {
+        return Vec2f(x * other[0, 0] + y * other[1, 0], x * other[0, 1] + y * other[1, 1])
+    }
+
     operator fun unaryMinus(): Vec2f = Vec2f(-x, -y)
+
+    operator fun invoke(o: Vec2f) {
+        x = o.x
+        y = o.y
+    }
 
     fun normalize() {
         val len = length()
@@ -74,5 +85,15 @@ class Vec2f(
 
     override fun toString(): String {
         return "Vec2f($x, $y)"
+    }
+
+    fun isRightHanded(o: Vec2f): Boolean = (x * o.y - y * o.x) >= 0f
+
+    fun rangleWithOX(): Double {
+        var rangle = acos(x / length()).toDouble()
+        if (y < 0f) {
+            rangle *= -1f
+        }
+        return rangle
     }
 }

@@ -3,6 +3,7 @@ package org.wocy
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javafx.application.Application
 import javafx.scene.Scene
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
 import javafx.stage.Stage
 import org.wocy.model.BowlingBall
@@ -14,6 +15,10 @@ class BilliardApp : Application() {
     lateinit var canvasPanel: CanvasPanel
     lateinit var controlPanel: ControlPanel
     lateinit var loop: BilliardLoop
+    private var lastX = 0.0
+    private var lastY = 0.0
+    private var isDragging = false
+    private val sensitivity = 0.2
 
     override fun init() {
         logger.info { "init" }
@@ -21,7 +26,9 @@ class BilliardApp : Application() {
 
         val canvasWidth = 800.0
         val canvasHeight = 600.0
-        canvasPanel = CanvasPanel(canvasWidth, canvasHeight)
+        canvasPanel = CanvasPanel(canvasWidth, canvasHeight).apply {
+            isFocusTraversable = true
+        }
         controlPanel = ControlPanel(10.0)
 
         configureListeners()
@@ -32,7 +39,7 @@ class BilliardApp : Application() {
             val ind = controlPanel.strikeBallSpinner.value - 1
             val force = controlPanel.strikeBallForceSpinner.value.toFloat()
             val angle = controlPanel.strikeBallAngleSpinner.value
-            (loop.models[ind] as BowlingBall).cueHit(force, angle)
+            (loop.models[ind] as BowlingBall).cueHit(force, Math.toRadians(angle))
         }
         controlPanel.moveLeftButton.setOnAction {
             loop.camera.moveLeft()
@@ -73,6 +80,48 @@ class BilliardApp : Application() {
             val deg = controlPanel.rotateOZSpinner.value.toFloat()
             loop.camera.rotateOZ(deg)
             //logger.info { "${loop.camera}" }
+        }
+
+        canvasPanel.setOnKeyPressed { event ->
+            when (event.code) {
+                KeyCode.W, KeyCode.UP       -> loop.camera.moveForward()
+                KeyCode.S, KeyCode.DOWN     -> loop.camera.moveBackward()
+                KeyCode.A, KeyCode.LEFT     -> loop.camera.moveLeft()
+                KeyCode.D, KeyCode.RIGHT    -> loop.camera.moveRight()
+                KeyCode.SPACE               -> loop.camera.moveUpward()
+                KeyCode.CAPS, KeyCode.SHIFT -> loop.camera.moveDownward()
+                else                        -> {}
+            }
+        }
+
+        canvasPanel.setOnMousePressed { event ->
+            if (event.isPrimaryButtonDown) {
+                lastX = event.x; lastY = event.y
+                isDragging = true
+                canvasPanel.requestFocus()
+            }
+        }
+
+        canvasPanel.setOnMouseReleased { event ->
+            isDragging = false
+        }
+
+        canvasPanel.setOnMouseDragged { event ->
+            if (!isDragging) {
+                return@setOnMouseDragged
+            }
+            val dx = event.x - lastX
+            val dy = event.y - lastY
+            lastX = event.x; lastY = event.y
+            if (!event.isShiftDown) {
+                loop.camera.rotateAroundUp((dx * sensitivity).toFloat())
+            } else {
+                loop.camera.rotateAroundRight((-dy * sensitivity).toFloat())
+            }
+        }
+
+        controlPanel.setOnMousePressed { event ->
+            canvasPanel.requestFocus()
         }
     }
 

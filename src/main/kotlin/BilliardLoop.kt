@@ -12,7 +12,7 @@ import org.wocy.light.DistantLight
 import org.wocy.model.BaseModel
 import org.wocy.model.BowlingBall
 import org.wocy.model.Table
-import org.wocy.primitive.Mat44f
+import org.wocy.primitive.Mat4f
 import org.wocy.primitive.Vec2f
 import org.wocy.primitive.Vec3f
 import kotlin.math.cos
@@ -39,9 +39,9 @@ class BilliardLoop(
         screenHeight = height.toDouble(),
     )
     val light = DistantLight(
-        //        Mat44f.identity(),
-        lightToWorld = Mat44f.rotationOX(-60f),
-        //        Mat44f.translation(1.5f, 3.1f, -3f),
+        //        Mat4f.identity(),
+        lightToWorld = Mat4f.rotationOX(-60f) * Mat4f.rotationOY(45f),
+        //        Mat4f.translation(1.5f, 3.1f, -3f),
         color = Color.WHITE,
         intensity = 1f,
     )
@@ -49,7 +49,7 @@ class BilliardLoop(
     val models = mutableListOf<BaseModel>(
         BowlingBall(Vec3f(0f, 3.5f, -10f), 3.5f, Color.RED, Vec2f()),
         BowlingBall(Vec3f(1.5f, 3.5f, 10f), 3.5f, Color.YELLOW, Vec2f()),
-        Table(Color.GREEN, (440f - 2f * cueLength - 2f * 10f), (350f - 2f * cueLength - 2f * 10f)),
+        Table(Color.GREEN, (440f - 2f * cueLength - 2f * 10f), (350f - 2f * cueLength - 2f * 10f), 0.618f * 3.5f),
     )
     private val renderer = Renderer(
         width.toInt(),
@@ -103,8 +103,21 @@ class BilliardLoop(
     }
 
     private fun applyPhysics() {
+        updatePosition()
+        collide()
+    }
+
+    private fun updatePosition() {
         for (model in models) {
-            model.update(frameIntervalS)
+            model.updatePosition(frameIntervalS)
+        }
+    }
+
+    private fun collide() {
+        for (i in 0 until models.size - 1) {
+            for (j in i + 1 until models.size) {
+                models[i].collide(models[j])
+            }
         }
     }
 

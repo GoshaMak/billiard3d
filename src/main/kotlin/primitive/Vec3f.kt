@@ -64,13 +64,13 @@ class Vec3f(
         z *= other.z
     }
 
-    operator fun times(other: Mat44f): Vec3f = Vec3f(
+    operator fun times(other: Mat4f): Vec3f = Vec3f(
         x * other[0, 0] + y * other[1, 0] + z * other[2, 0] + other[3, 0],
         x * other[0, 1] + y * other[1, 1] + z * other[2, 1] + other[3, 1],
         x * other[0, 2] + y * other[1, 2] + z * other[2, 2] + other[3, 2],
     )
 
-    operator fun timesAssign(other: Mat44f) {
+    operator fun timesAssign(other: Mat4f) {
         val px = x;
         val py = y;
         val pz = z
