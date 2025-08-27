@@ -7,7 +7,9 @@ class Vec2f(
     var x: Float,
     var y: Float,
 ) {
+
     companion object {
+
         val EPSILON = 1e-8
 
         fun normalized(vec: Vec2f): Vec2f {

@@ -7,6 +7,7 @@ import org.wocy.camera.Camera
 import org.wocy.camera.Ray
 import org.wocy.light.Light
 import org.wocy.model.BaseModel
+import org.wocy.model.BaseModelComposite
 import org.wocy.primitive.Vec3f
 import org.wocy.primitive.Vertex
 import kotlin.math.max
@@ -17,9 +18,11 @@ class Renderer(
     private val screenHeight: Int,
     private val camera: Camera,
     private val light: Light,
-    private val models: MutableList<BaseModel>,
+    private val models: BaseModelComposite,
 ) {
+
     companion object {
+
         private val logger = KotlinLogging.logger {}
     }
 
@@ -27,7 +30,7 @@ class Renderer(
     private val pixels = IntArray(screenWidth * screenHeight)
 
     private val bias = 0.001f
-    private val bgColor = Color.WHITE // floor color
+    private val bgColor = Color.BLACK // floor color
 
     fun destroy() {
         scope.cancel()
@@ -87,8 +90,8 @@ class Renderer(
             -light.getDirectionAndIntensity(hitPoint.position).first,
         )
         var isShadowed = false
-        for (i in 0 until models.size) {
-            if (models[i].intersect(shadowRay) != null) { // && intersection.position != shadowRay.origin) {
+        for (model in models) {
+            if (model.intersect(shadowRay) != null) { // && intersection.position != shadowRay.origin) {
                 isShadowed = true
                 break
             }
@@ -101,10 +104,12 @@ class Renderer(
         l = -l
         val shadowRay = Ray(hitPoint.position + hitPoint.normal * bias, l)
         val isVisible = (trace(shadowRay).first == null)
-        val diffuse = light.color * (isVisible
-                * /*(model.albedo / Math.PI).toFloat() * */intensity
-                * max(0.0f, hitPoint.normal.dot(l)))
-        val c = model.color * diffuse
+        val ia = 0.2f
+        val kd = 1f //(model.albedo / Math.PI).toFloat()
+        val diffuse = (isVisible
+                * intensity * kd * max(0.0f, hitPoint.normal.dot(l)))
+//        var intens = ia + diffuse
+        val c = model.color * (ia + diffuse)
         return c
     }
 

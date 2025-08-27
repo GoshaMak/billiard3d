@@ -5,6 +5,7 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 
 class ControlPanel : VBox {
+
     val addBallButton = Button("AddBall")
     val removeBallButton = Button("RemoveBall")
     val chooseBallButton = Button("Choose Ball")

@@ -10,6 +10,7 @@ class DistantLight(
     color: Color, // The RGB color of the light (values range from [0,1]).
     intensity: Float, // probably 0..1
 ) : Light(lightToWorld, color, intensity) {
+
     private var direction = (Vec3f(0f, 0f, -1f) * lightToWorld).apply { normalize() }
         set(value) {
             field = value

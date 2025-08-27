@@ -7,7 +7,9 @@ class Vec3f(
     var y: Float,
     var z: Float,
 ) {
+
     companion object {
+
         private val EPSILON = 1e-8
         fun normalized(vec: Vec3f): Vec3f {
             val len = vec.length()

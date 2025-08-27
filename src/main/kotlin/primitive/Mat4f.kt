@@ -6,7 +6,9 @@ import kotlin.math.sin
 
 // think about storing it as transposed to optimize cache loads during multiplication
 class Mat4f {
+
     companion object {
+
         fun identity(): Mat4f {
             val mtr = FloatArray(16) { i: Int ->
                 when (i) {

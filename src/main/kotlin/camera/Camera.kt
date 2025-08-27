@@ -26,6 +26,7 @@ abstract class Camera(
         abstract var height: Int
     */
 ) {
+
     protected var cameraToWorld: Mat4f = Mat4f(right, up, forward, position)
 
     abstract fun generateRay(px: Int, py: Int, screenWidth: Int, screenHeight: Int): Ray

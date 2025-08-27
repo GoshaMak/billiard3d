@@ -7,6 +7,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 class PolygonMeshModelImpl {
+
     private val vertices: MutableList<Vertex> = ArrayList()
     private val faces: MutableList<Face> = ArrayList()
 

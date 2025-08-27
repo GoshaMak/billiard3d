@@ -9,12 +9,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.wocy.camera.RayTracingCamera
 import org.wocy.light.DistantLight
-import org.wocy.model.BaseModel
-import org.wocy.model.BowlingBall
-import org.wocy.model.Table
+import org.wocy.model.BaseModelComposite
 import org.wocy.primitive.Mat4f
 import org.wocy.primitive.Vec2f
 import org.wocy.primitive.Vec3f
+import org.wocy.registry.VisitorRegistry
+import org.wocy.visitor.CollisionVisitor
+import org.wocy.visitor.PhysicsVisitor
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -23,7 +24,9 @@ class BilliardLoop(
     private val width: Int,
     private val height: Int,
 ) : AnimationTimer() {
+
     companion object {
+
         private val logger = KotlinLogging.logger {}
     }
 
@@ -39,42 +42,46 @@ class BilliardLoop(
         screenHeight = height.toDouble(),
     )
     val light = DistantLight(
-        //        Mat4f.identity(),
-        lightToWorld = Mat4f.rotationOX(-60f) * Mat4f.rotationOY(45f),
-        //        Mat4f.translation(1.5f, 3.1f, -3f),
+        lightToWorld = Mat4f.rotationOX(-60f),
         color = Color.WHITE,
         intensity = 1f,
     )
-    val cueLength: Float = 120f
-    val models = mutableListOf<BaseModel>(
-        BowlingBall(Vec3f(0f, 3.5f, -10f), 3.5f, Color.RED, Vec2f()),
-        BowlingBall(Vec3f(1.5f, 3.5f, 10f), 3.5f, Color.YELLOW, Vec2f()),
-        Table(Color.GREEN, (440f - 2f * cueLength - 2f * 10f), (350f - 2f * cueLength - 2f * 10f), 0.618f * 3.5f),
-    )
+
+    val composite = BaseModelComposite(Color.WHITE, 0f, 0f, Vec2f())
     private val renderer = Renderer(
-        width.toInt(),
-        height.toInt(),
+        width,
+        height,
         camera,
         light,
-        models,
+        composite,
     )
 
     private var lastTime = 0L
     private val frameIntervalNs = 1_000_000_000L / 60  // 60 fps // nanoseconds
     private val frameIntervalS = frameIntervalNs / 1_000_000_000.0 // 60 fps // seconds
 
+    private val visitorRegistry = VisitorRegistry(
+        listOf(
+            Pair("physics", PhysicsVisitor(frameIntervalS)),
+            Pair("collision", CollisionVisitor()),
+        ),
+    )
+
     override fun handle(now: Long) {
         if (lastTime == 0L) {
             lastTime = now
-            camera.move(0f, 50f, 0f)
-            camera.rotateOX(-90f)
+            camera.apply {
+                move(0f, 50f, 0f)
+                rotateOY(-90f)
+                rotateOX(-90f)
+            }
             return
         }
         if (now - lastTime >= frameIntervalNs) {
-            val fps = 1_000_000_000 / (now - lastTime)
             applyPhysics()
             drawFrame()
             customAnimation()
+            val fps = 1_000_000_000 / (now - lastTime)
             logger.info { "FPS: $fps" }
             lastTime = now
         }
@@ -107,19 +114,9 @@ class BilliardLoop(
         collide()
     }
 
-    private fun updatePosition() {
-        for (model in models) {
-            model.updatePosition(frameIntervalS)
-        }
-    }
+    private fun updatePosition() = composite.accept(visitorRegistry.get("physics"))
 
-    private fun collide() {
-        for (i in 0 until models.size - 1) {
-            for (j in i + 1 until models.size) {
-                models[i].collide(models[j])
-            }
-        }
-    }
+    private fun collide() = composite.accept(visitorRegistry.get("collision"))
 
     // желательно не делать вычисления в UI потоке
     private fun drawFrame() = runBlocking {

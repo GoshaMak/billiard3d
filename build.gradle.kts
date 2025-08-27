@@ -34,7 +34,7 @@ application {
     applicationDefaultJvmArgs = listOf(
         "--module-path",
         configurations.runtimeClasspath.get()
-            .joinToString(separator = System.getProperty("path.separator")) { it.absolutePath },
+                .joinToString(separator = System.getProperty("path.separator")) { it.absolutePath },
         "--add-modules",
         "javafx.controls,javafx.graphics",
     )
