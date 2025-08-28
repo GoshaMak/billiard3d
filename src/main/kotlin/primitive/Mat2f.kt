@@ -2,9 +2,7 @@ package org.wocy.primitive
 
 // think about storing it as transposed to optimize cache loads during multiplication
 class Mat2f {
-
     companion object {
-
         fun identity(): Mat2f {
             val mtr = FloatArray(4) { i: Int ->
                 when (i) {

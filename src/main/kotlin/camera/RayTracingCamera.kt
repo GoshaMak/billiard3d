@@ -10,7 +10,6 @@ class RayTracingCamera(
     screenWidth: Double,
     screenHeight: Double,
 ) : Camera(position, forward, up, right, screenWidth, screenHeight) {
-
     val horFov = 200
     val vertFov = 140
 

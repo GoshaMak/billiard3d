@@ -11,7 +11,6 @@ import org.wocy.ui.CanvasPanel
 import org.wocy.ui.ControlPanel
 
 class BilliardApp : Application() {
-
     private val logger = KotlinLogging.logger {}
     lateinit var canvasPanel: CanvasPanel
     lateinit var controlPanel: ControlPanel
@@ -40,38 +39,47 @@ class BilliardApp : Application() {
             val ind = controlPanel.strikeBallSpinner.value - 1
             val force = controlPanel.strikeBallForceSpinner.value.toFloat()
             val angle = controlPanel.strikeBallAngleSpinner.value
-            (loop.composite[ind] as BowlingBall).cueHit(force, Math.toRadians(angle))
+            (loop.models[ind] as BowlingBall).cueHit(force, Math.toRadians(angle))
         }
         controlPanel.moveLeftButton.setOnAction {
             loop.camera.moveLeft()
+            //logger.info { "${loop.camera}" }
         }
         controlPanel.moveRightButton.setOnAction {
             loop.camera.moveRight()
+            //logger.info { "${loop.camera}" }
         }
         controlPanel.moveBackwardButton.setOnAction {
             loop.camera.moveBackward()
+            //logger.info { "${loop.camera}" }
         }
         controlPanel.moveForwardButton.setOnAction {
             loop.camera.moveForward()
+            //logger.info { "${loop.camera}" }
         }
         controlPanel.moveDownwardButton.setOnAction {
             loop.camera.moveDownward()
+            //logger.info { "${loop.camera}" }
         }
         controlPanel.moveUpwardButton.setOnAction {
             loop.camera.moveUpward()
+            //logger.info { "${loop.camera}" }
         }
 
         controlPanel.rotateOXButton.setOnAction {
             val deg = controlPanel.rotateOXSpinner.value.toFloat()
             loop.camera.rotateOX(deg)
+            //logger.info { "${loop.camera}" }
         }
         controlPanel.rotateOYButton.setOnAction {
             val deg = controlPanel.rotateOYSpinner.value.toFloat()
             loop.camera.rotateOY(deg)
+            //logger.info { "${loop.camera}" }
         }
         controlPanel.rotateOZButton.setOnAction {
             val deg = controlPanel.rotateOZSpinner.value.toFloat()
             loop.camera.rotateOZ(deg)
+            //logger.info { "${loop.camera}" }
         }
 
         canvasPanel.setOnKeyPressed { event ->
@@ -105,10 +113,10 @@ class BilliardApp : Application() {
             val dx = event.x - lastX
             val dy = event.y - lastY
             lastX = event.x; lastY = event.y
-            if (event.isShiftDown) {
-                loop.camera.rotateAroundRight((-dy * sensitivity).toFloat())
-            } else {
+            if (!event.isShiftDown) {
                 loop.camera.rotateAroundUp((dx * sensitivity).toFloat())
+            } else {
+                loop.camera.rotateAroundRight((-dy * sensitivity).toFloat())
             }
         }
 
@@ -124,8 +132,7 @@ class BilliardApp : Application() {
         stage.scene = Scene(HBox(controlPanel, canvasPanel))
         stage.show()
 
-        loop =
-            BilliardLoop(canvasPanel.graphicsContext2D, canvasPanel.width.toInt(), canvasPanel.height.toInt())
-                    .apply { start() }
+        loop = BilliardLoop(canvasPanel.graphicsContext2D, canvasPanel.width.toInt(), canvasPanel.height.toInt())
+                .apply { start() }
     }
 }

@@ -9,7 +9,6 @@ abstract class Light(
     var color: Color,
     var intensity: Float,
 ) {
-
     abstract fun getDirectionAndIntensity(p: Vec3f): Pair<Vec3f, Float>
 
     open fun translate(dx: Float, dy: Float, dz: Float) {

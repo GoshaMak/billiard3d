@@ -5,7 +5,6 @@ import org.wocy.camera.Ray
 import org.wocy.primitive.Vec2f
 import org.wocy.primitive.Vec3f
 import org.wocy.primitive.Vertex
-import org.wocy.visitor.BaseModelVisitor
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -16,7 +15,6 @@ class Table(
     val width: Float,
     val borderHeight: Float,
 ) : BaseModel(color, 0.18f, Float.MAX_VALUE, Vec2f()) {
-
     private val vertices = listOf<Vec3f>(
         // поверхность, по которой катаются шары
         Vec3f(-width / 2f, 0f, length / 2f),
@@ -52,6 +50,34 @@ class Table(
     private val radius = max(width / 2f, max(length / 2f, borderHeight / 2f))
     private val radius2 = radius * radius
 
+    override fun collide(o: BaseModel) {
+        if (o !is BowlingBall) {
+            return
+        }
+        if (o.center.x - o.radius <= -width / 2f) {
+            if (o.velocity.y < 0f) {
+                o.velocity.y *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        } else if (o.center.x + o.radius >= width / 2f) {
+            if (o.velocity.y > 0f) {
+                o.velocity.y *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        }
+        if (o.center.z - o.radius <= -length / 2f) {
+            if (o.velocity.x < 0f) {
+                o.velocity.x *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        } else if (o.center.z + o.radius >= length / 2f) {
+            if (o.velocity.x > 0f) {
+                o.velocity.x *= -1f
+                o.rangle = o.velocity.rangleWithOX()
+            }
+        }
+    }
+
     override fun intersect(ray: Ray): Vertex? {
         /*
                 if (!isIntersectsSphere(ray)) {
@@ -85,8 +111,7 @@ class Table(
         if (pos == null) {
             return null
         }
-        val n =
-            (vertices[ind + 1] - vertices[ind]).cross(vertices[ind + 3] - vertices[ind]).apply { normalize() }
+        val n = (vertices[ind + 1] - vertices[ind]).cross(vertices[ind + 3] - vertices[ind]).apply { normalize() }
         return Vertex(pos, n)
     }
 
@@ -157,7 +182,5 @@ class Table(
         return P // The ray hits the triangle
     }
 
-    override fun accept(visitor: BaseModelVisitor) {
-        visitor.visit(this)
-    }
+    override fun updatePosition(dt: Double) {}
 }

@@ -11,7 +11,6 @@ class PointLight(
     color: Color,
     intensity: Float,
 ) : Light(lightToWorld, color, intensity) {
-
     private var position = Vec3f() * lightToWorld
 
     override fun getDirectionAndIntensity(p: Vec3f): Pair<Vec3f, Float> {
