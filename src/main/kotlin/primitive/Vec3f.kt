@@ -1,5 +1,8 @@
 package org.wocy.primitive
 
+import kotlin.math.abs
+import kotlin.math.atan
+import kotlin.math.sign
 import kotlin.math.sqrt
 
 class Vec3f(
@@ -7,11 +10,17 @@ class Vec3f(
     var y: Float,
     var z: Float,
 ) {
+
     companion object {
-        private val EPSILON = 1e-8
+
+        const val EPSILON = 1e-8
+
         fun normalized(vec: Vec3f): Vec3f {
             val len = vec.length()
-            return Vec3f(vec.x / len, vec.y / len, vec.z / len)
+            if (len > EPSILON) {
+                return Vec3f(vec.x / len, vec.y / len, vec.z / len)
+            }
+            return Vec3f(0f, 0f, 0f)
         }
 
         fun squaredLength(start: Vec3f, end: Vec3f): Float {
@@ -40,12 +49,28 @@ class Vec3f(
         z += other.z
     }
 
+    operator fun plus(other: Vec3d): Vec3f = Vec3f(x + other.x, y + other.y, z + other.z)
+
+    operator fun plusAssign(other: Vec3d) {
+        x += other.x.toFloat()
+        y += other.y.toFloat()
+        z += other.z.toFloat()
+    }
+
     operator fun minus(other: Vec3f): Vec3f = Vec3f(x - other.x, y - other.y, z - other.z)
 
     operator fun minusAssign(other: Vec3f) {
         x -= other.x
         y -= other.y
         z -= other.z
+    }
+
+    operator fun minus(other: Vec3d): Vec3f = Vec3f(x - other.x, y - other.y, z - other.z)
+
+    operator fun minusAssign(other: Vec3d) {
+        x -= other.x.toFloat()
+        y -= other.y.toFloat()
+        z -= other.z.toFloat()
     }
 
     operator fun times(other: Float): Vec3f = Vec3f(x * other, y * other, z * other)
@@ -56,6 +81,8 @@ class Vec3f(
         z *= other
     }
 
+    operator fun times(o: Double) = Vec3f(x * o, y * o, z * o)
+
     operator fun times(other: Vec3f): Vec3f = Vec3f(x * other.x, y * other.y, z * other.z)
 
     operator fun timesAssign(other: Vec3f) {
@@ -63,6 +90,12 @@ class Vec3f(
         y *= other.y
         z *= other.z
     }
+
+    operator fun times(o: Mat3f): Vec3f = Vec3f(
+        x * o[0, 0] + y * o[1, 0] + z * o[2, 0],
+        x * o[0, 1] + y * o[1, 1] + z * o[2, 1],
+        x * o[0, 2] + y * o[1, 2] + z * o[2, 2],
+    )
 
     operator fun times(other: Mat4f): Vec3f = Vec3f(
         x * other[0, 0] + y * other[1, 0] + z * other[2, 0] + other[3, 0],
@@ -81,14 +114,28 @@ class Vec3f(
 
     operator fun unaryMinus(): Vec3f = Vec3f(-x, -y, -z)
 
+    operator fun invoke(o: Vec3f) {
+        x = o.x
+        y = o.y
+        z = o.z
+    }
+
     fun normalize() {
         val len = length()
-        x /= len
-        y /= len
-        z /= len
+        if (len > EPSILON) {
+            x /= len
+            y /= len
+            z /= len
+        } else {
+            x = 0f
+            y = 0f
+            z = 0f
+        }
     }
 
     fun dot(vec: Vec3f): Float = x * vec.x + y * vec.y + z * vec.z
+
+    fun dot(vec: Vec3d): Float = (x * vec.x + y * vec.y + z * vec.z).toFloat()
 
     fun cross(o: Vec3f): Vec3f = Vec3f(
         y * o.z - z * o.y, z * o.x - x * o.z, x * o.y - y * o.x
@@ -98,15 +145,18 @@ class Vec3f(
 
     fun length(): Float = sqrt(squaredLength())
 
-    /*
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Vec3) return false
-            return (abs(x - other.x) < EPSILON)
-                    && (abs(y - other.y) < EPSILON)
-                    && (abs(z - other.z) < EPSILON)
+    fun isRightHanded(o: Vec3f): Boolean = (x * o.y - y * o.x) >= 0f
+
+    fun rangleOZOX(): Double {
+        if (abs(z) < EPSILON) {
+            return Math.PI / 2.0 * sign(x)
         }
-    */
+        var rangle = atan(x.toDouble() / z)
+        if (z < 0f) {
+            rangle += Math.PI
+        }
+        return rangle
+    }
 
     override fun toString(): String {
         return "Vec3f($x, $y, $z)"

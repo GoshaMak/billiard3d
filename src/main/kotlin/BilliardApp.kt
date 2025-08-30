@@ -11,6 +11,7 @@ import org.wocy.ui.CanvasPanel
 import org.wocy.ui.ControlPanel
 
 class BilliardApp : Application() {
+
     private val logger = KotlinLogging.logger {}
     lateinit var canvasPanel: CanvasPanel
     lateinit var controlPanel: ControlPanel
@@ -113,10 +114,10 @@ class BilliardApp : Application() {
             val dx = event.x - lastX
             val dy = event.y - lastY
             lastX = event.x; lastY = event.y
-            if (!event.isShiftDown) {
-                loop.camera.rotateAroundUp((dx * sensitivity).toFloat())
-            } else {
+            if (event.isShiftDown) {
                 loop.camera.rotateAroundRight((-dy * sensitivity).toFloat())
+            } else {
+                loop.camera.rotateAroundUp((dx * sensitivity).toFloat())
             }
         }
 
@@ -132,7 +133,10 @@ class BilliardApp : Application() {
         stage.scene = Scene(HBox(controlPanel, canvasPanel))
         stage.show()
 
-        loop = BilliardLoop(canvasPanel.graphicsContext2D, canvasPanel.width.toInt(), canvasPanel.height.toInt())
-                .apply { start() }
+        loop = BilliardLoop(
+            canvasPanel.graphicsContext2D,
+            canvasPanel.width.toInt(),
+            canvasPanel.height.toInt(),
+        ).apply { start() }
     }
 }

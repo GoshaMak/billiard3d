@@ -18,7 +18,7 @@ class ControlPanel : VBox {
         isEditable = true
     }
     val strikeBallForceSpinner = Spinner<Int>().apply {
-        valueFactory = SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20000, 0, 100)
+        valueFactory = SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20000, 5000, 500)
         isEditable = true
     }
     val moveLeftButton = Button("←")

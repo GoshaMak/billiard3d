@@ -7,12 +7,17 @@ class Vec2f(
     var x: Float,
     var y: Float,
 ) {
+
     companion object {
-        val EPSILON = 1e-8
+
+        const val EPSILON = 1e-8
 
         fun normalized(vec: Vec2f): Vec2f {
             val len = vec.length()
-            return Vec2f(vec.x / len, vec.y / len)
+            if (len > EPSILON) {
+                return Vec2f(vec.x / len, vec.y / len)
+            }
+            return Vec2f(0f, 0f)
         }
 
         fun squaredLength(start: Vec2f, end: Vec2f): Float {
@@ -60,9 +65,10 @@ class Vec2f(
         y *= other.y
     }
 
-    operator fun times(other: Mat2f): Vec2f {
-        return Vec2f(x * other[0, 0] + y * other[1, 0], x * other[0, 1] + y * other[1, 1])
-    }
+    operator fun times(other: Mat2f): Vec2f = Vec2f(
+        x * other[0, 0] + y * other[1, 0],
+        x * other[0, 1] + y * other[1, 1],
+    )
 
     operator fun unaryMinus(): Vec2f = Vec2f(-x, -y)
 
@@ -73,8 +79,13 @@ class Vec2f(
 
     fun normalize() {
         val len = length()
-        x /= len
-        y /= len
+        if (len > EPSILON) {
+            x /= len
+            y /= len
+        } else {
+            x = 0f
+            y = 0f
+        }
     }
 
     fun dot(vec: Vec2f): Float = x * vec.x + y * vec.y

@@ -2,7 +2,7 @@ package org.wocy.model
 
 import javafx.scene.paint.Color
 import org.wocy.camera.Ray
-import org.wocy.primitive.Vec2f
+import org.wocy.primitive.Vec3d
 import org.wocy.primitive.Vec3f
 import org.wocy.primitive.Vertex
 import kotlin.math.abs
@@ -14,7 +14,8 @@ class Table(
     val length: Float,
     val width: Float,
     val borderHeight: Float,
-) : BaseModel(color, 0.18f, Float.MAX_VALUE, Vec2f()) {
+) : BaseModel(color, 0.18f, Float.MAX_VALUE, Vec3d()) {
+
     private val vertices = listOf<Vec3f>(
         // поверхность, по которой катаются шары
         Vec3f(-width / 2f, 0f, length / 2f),
@@ -50,32 +51,90 @@ class Table(
     private val radius = max(width / 2f, max(length / 2f, borderHeight / 2f))
     private val radius2 = radius * radius
 
-    override fun collide(o: BaseModel) {
+    // TODO apply dt
+    override fun collide(o: BaseModel, dt: Double) {
         if (o !is BowlingBall) {
             return
         }
         if (o.center.x - o.radius <= -width / 2f) {
-            if (o.velocity.y < 0f) {
-                o.velocity.y *= -1f
-                o.rangle = o.velocity.rangleWithOX()
+            if (o.velocity.x < 0f) {
+                o.rollBack(dt)
+                val timeLeft = resolvePenetration(
+                    o,
+                    o.center.x,
+                    -width / 2f + o.radius,
+                    o.velocity.x,
+                    dt,
+                )
+                o.velocity.x *= -1f
+                o.rangleOZOX = o.velocity.rangleOZOX()
+//                o.updatePosition(timeLeft)
             }
         } else if (o.center.x + o.radius >= width / 2f) {
-            if (o.velocity.y > 0f) {
-                o.velocity.y *= -1f
-                o.rangle = o.velocity.rangleWithOX()
+            if (o.velocity.x > 0f) {
+                o.rollBack(dt)
+                val timeLeft = resolvePenetration(
+                    o,
+                    o.center.x,
+                    width / 2f - o.radius,
+                    o.velocity.x,
+                    dt,
+                )
+                o.velocity.x *= -1f
+                o.rangleOZOX = o.velocity.rangleOZOX()
+//                o.updatePosition(timeLeft)
             }
         }
         if (o.center.z - o.radius <= -length / 2f) {
-            if (o.velocity.x < 0f) {
-                o.velocity.x *= -1f
-                o.rangle = o.velocity.rangleWithOX()
+            if (o.velocity.z < 0f) {
+                o.rollBack(dt)
+                val timeLeft = resolvePenetration(
+                    o,
+                    o.center.z,
+                    -length / 2f + o.radius,
+                    o.velocity.z,
+                    dt,
+                )
+                o.velocity.z *= -1f
+                o.rangleOZOX = o.velocity.rangleOZOX()
+//                o.updatePosition(timeLeft)
             }
         } else if (o.center.z + o.radius >= length / 2f) {
-            if (o.velocity.x > 0f) {
-                o.velocity.x *= -1f
-                o.rangle = o.velocity.rangleWithOX()
+            if (o.velocity.z > 0f) {
+                o.rollBack(dt)
+                val timeLeft = resolvePenetration(
+                    o,
+                    o.center.z,
+                    length / 2f - o.radius,
+                    o.velocity.z,
+                    dt,
+                )
+                o.velocity.z *= -1f
+                o.rangleOZOX = o.velocity.rangleOZOX()
+//                o.updatePosition(timeLeft)
             }
         }
+        if (o.center.y < o.radius) {
+            o.center.y = o.radius
+            if (o.velocity.y < 0f) {
+                o.velocity.y *= -1f
+            }
+        }
+    }
+
+    private fun resolvePenetration(
+        b: BowlingBall,
+        startPos: Float,
+        endPos: Float,
+        v: Double,
+        dt: Double,
+    ): Double {
+        val dtnew = (endPos - startPos) / v
+        if (/*dtnew > dt || */dtnew <= 0.0) {
+            return 0.0
+        }
+        b.center += b.velocity * dtnew
+        return dt - dtnew
     }
 
     override fun intersect(ray: Ray): Vertex? {
@@ -111,7 +170,8 @@ class Table(
         if (pos == null) {
             return null
         }
-        val n = (vertices[ind + 1] - vertices[ind]).cross(vertices[ind + 3] - vertices[ind]).apply { normalize() }
+        val n =
+            (vertices[ind + 1] - vertices[ind]).cross(vertices[ind + 3] - vertices[ind]).apply { normalize() }
         return Vertex(pos, n)
     }
 

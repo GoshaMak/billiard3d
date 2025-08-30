@@ -13,7 +13,7 @@ import org.wocy.model.BaseModel
 import org.wocy.model.BowlingBall
 import org.wocy.model.Table
 import org.wocy.primitive.Mat4f
-import org.wocy.primitive.Vec2f
+import org.wocy.primitive.Vec3d
 import org.wocy.primitive.Vec3f
 import kotlin.math.cos
 import kotlin.math.sin
@@ -23,37 +23,38 @@ class BilliardLoop(
     private val width: Int,
     private val height: Int,
 ) : AnimationTimer() {
-    companion object {
-        private val logger = KotlinLogging.logger {}
-    }
 
+    private val logger = KotlinLogging.logger {}
     private val writer = gc.pixelWriter
     private val format = PixelFormat.getIntArgbPreInstance()
 
     // 1 unit = 1 centimeter
     val camera = RayTracingCamera(
-        position = Vec3f(0f, 3f, 0f),
+        position = Vec3f(0f, 0f, 0f),
         forward = Vec3f(0f, 0f, -1f),
         up = Vec3f(0f, 1f, 0f),
         screenWidth = width.toDouble(),
         screenHeight = height.toDouble(),
     )
     val light = DistantLight(
-        //        Mat4f.identity(),
-        lightToWorld = Mat4f.rotationOX(-60f) * Mat4f.rotationOY(45f),
-        //        Mat4f.translation(1.5f, 3.1f, -3f),
+        lightToWorld = Mat4f.rotationOX(-60f),
         color = Color.WHITE,
         intensity = 1f,
     )
     val cueLength: Float = 120f
     val models = mutableListOf<BaseModel>(
-        BowlingBall(Vec3f(0f, 3.5f, -10f), 3.5f, Color.RED, Vec2f()),
-        BowlingBall(Vec3f(1.5f, 3.5f, 10f), 3.5f, Color.YELLOW, Vec2f()),
-        Table(Color.GREEN, (440f - 2f * cueLength - 2f * 10f), (350f - 2f * cueLength - 2f * 10f), 0.618f * 3.5f),
+        BowlingBall(Vec3f(0f, 3.5f, -10f), 3.5f, Color.RED, Vec3d()),
+        BowlingBall(Vec3f(0f, .1f, 10f), .1f, Color.YELLOW, Vec3d()),
+        Table(
+            Color.GREEN,
+            (440f - 2f * cueLength - 2f * 10f),
+            (350f - 2f * cueLength - 2f * 10f),
+            0.618f * 3.5f
+        ),
     )
     private val renderer = Renderer(
-        width.toInt(),
-        height.toInt(),
+        width,
+        height,
         camera,
         light,
         models,
@@ -66,16 +67,18 @@ class BilliardLoop(
     override fun handle(now: Long) {
         if (lastTime == 0L) {
             lastTime = now
-            camera.move(0f, 50f, 0f)
-            camera.rotateOX(-90f)
+            camera.apply {
+                move(-80f, 20f, 0f)
+                rotateOY(-90f)
+            }
             return
         }
         if (now - lastTime >= frameIntervalNs) {
-            val fps = 1_000_000_000 / (now - lastTime)
             applyPhysics()
             drawFrame()
             customAnimation()
-            logger.info { "FPS: $fps" }
+            //            val fps = 1_000_000_000 / (now - lastTime)
+            //            logger.info { "FPS: $fps" }
             lastTime = now
         }
     }
@@ -103,22 +106,20 @@ class BilliardLoop(
     }
 
     private fun applyPhysics() {
-        updatePosition()
-        collide()
+        updatePosition(frameIntervalS)
+        collide(frameIntervalS)
     }
 
-    private fun updatePosition() {
-        for (model in models) {
-            model.updatePosition(frameIntervalS)
-        }
-    }
-
-    private fun collide() {
+    private fun collide(dt: Double) {
         for (i in 0 until models.size - 1) {
             for (j in i + 1 until models.size) {
-                models[i].collide(models[j])
+                models[i].collide(models[j], dt)
             }
         }
+    }
+
+    private fun updatePosition(dt: Double) = models.forEach { m ->
+        m.updatePosition(dt)
     }
 
     // желательно не делать вычисления в UI потоке
