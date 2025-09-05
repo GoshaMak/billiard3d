@@ -23,8 +23,6 @@ class BowlingBall(
     var rangleOZOX = 0.0
         set(value) {
             field = value
-            //            az = acoef * cos(value)
-            //            ax = acoef * sin(value)
             acceleration.z = nuG * cos(value) * (abs(velocity.z) > Vec3d.EPSILON).toInt()
             acceleration.x = nuG * sin(value) * (abs(velocity.x) > Vec3d.EPSILON).toInt()
         }
@@ -34,7 +32,7 @@ class BowlingBall(
     val cueHitTimeS = 310e-6f // s
     val nuG = nu * g
 
-    val acceleration = Vec3d(0.0, g.toDouble(), 0.0) // TODO change to double
+    val acceleration = Vec3d(0.0, 0.0, 0.0)
 
     operator fun Double.times(vec: Vec3f): Vec3f = Vec3f(vec.x * this, vec.y * this, vec.z * this)
 
@@ -85,26 +83,57 @@ class BowlingBall(
 
     // dt - s
     override fun updatePosition(dt: Double) {
+        updateHorizontalPosition(dt)
+        updateVerticalPosition(dt)
+    }
+
+    private fun updateHorizontalPosition(dt: Double) {
+        var az = acceleration.z
+        var ax = acceleration.x
+        if (abs(center.y - radius) > Vec3f.EPSILON) { // in the air right now
+            logger.info { "Ball(${color}) - in the air" }
+            az = 0.0
+            ax = 0.0
+        }
+
         if (abs(velocity.z) <= Vec3d.EPSILON && abs(velocity.x) <= Vec3d.EPSILON) {
-            stop()
+            velocity.z = 0.0
+            velocity.x = 0.0
             return
         }
 
         var t = dt
-        var vz = velocity.z - acceleration.z * dt
-        var vx = velocity.x - acceleration.x * dt
-        var vy = velocity.y - acceleration.y * dt
-        if (vz * velocity.z < 0.0 || vx * velocity.x < 0.0) { // по всем осям останавливается одновременно
-            t = velocity.z / acceleration.z
-            vz = 0.0; vx = 0.0; vy = 0.0
+        var vz = velocity.z - az * dt
+        var vx = velocity.x - ax * dt
+        if ((vz * velocity.z < 0.0 || vx * velocity.x < 0.0) && abs(az) > Vec3d.EPSILON) {
+            // на случай, когда остановится в промежутке (0; dt)
+            t = velocity.z / az
+            // по всем осям останавливается одновременно
+            vz = 0.0; vx = 0.0
         }
 
-        val dlz = (velocity.z * t - acceleration.z * t * t / 2.0).toFloat()
-        val dlx = (velocity.x * t - acceleration.x * t * t / 2.0).toFloat()
-        val dly = (velocity.y * t - acceleration.y * t * t / 2.0).toFloat()
+        val dlz = (velocity.z * t - az * t * t / 2.0).toFloat()
+        val dlx = (velocity.x * t - ax * t * t / 2.0).toFloat()
 
-        move(dlx * 100f, dly * 100f, dlz * 100f)
-        velocity.z = vz; velocity.x = vx; velocity.y = vy
+        move(dlx * 100f, 0f, dlz * 100f)
+        velocity.z = vz; velocity.x = vx
+    }
+
+    private fun updateVerticalPosition(dt: Double) {
+        if (abs(center.y - radius) > Vec3f.EPSILON) { // in air
+            acceleration.y = g.toDouble()
+        }
+
+        // проверка на то, хватит ли скорости поднять шар вверх
+        if (abs(velocity.y) < Vec3d.EPSILON && abs(center.y - radius) < Vec3f.EPSILON) {
+            velocity.y = 0.0
+            acceleration.y = 0.0
+            center.y = radius
+        } else {
+            val dly = (velocity.y * dt - acceleration.y * dt * dt / 2.0).toFloat()
+            move(0f, dly * 100f, 0f)
+            velocity.y -= acceleration.y * dt
+        }
     }
 
     fun move(dx: Float, dy: Float, dz: Float) {
@@ -134,7 +163,11 @@ class BowlingBall(
                 val v1new = v1newBallsRelated * ut
                 val v2new = v2newBallsRelated * ut
 
-//                v1new.y = 0.0; v2new.y = 0.0 // FIXME
+                if (radius != o.radius || (abs(center.y - radius) > Vec3f.EPSILON || (o.center.y - o.radius) > Vec3f.EPSILON)) {
+                    // if eq than they're already have acceleration
+                    acceleration.y = g.toDouble()
+                    o.acceleration.y = g.toDouble()
+                }
 
                 velocity(v1new)
                 rangleOZOX = velocity.rangleOZOX()
@@ -154,13 +187,6 @@ class BowlingBall(
                     return false
                 }
                 val timeLeft = resolvePenetration(this, o, dt)
-                // FIXME
-/*
-                if (timeLeft > Vec3d.EPSILON) {
-                    updatePosition(timeLeft)
-                    o.updatePosition(timeLeft)
-                }
-*/
                 return true
             }
             else           -> false
@@ -181,7 +207,6 @@ class BowlingBall(
             return 0.0
         }
         d = sqrt(d)
-        //  val dtnew = if (u2 < 1.0) (-cu + d) / u2 else (-cu + d) / u2
         val dtnew = min((-cu - d) / u2, (-cu + d) / u2)
         if (/*dtnew > dt || */dtnew <= 0.0) {
             return 0.0
@@ -193,7 +218,6 @@ class BowlingBall(
         return dt - dtnew
     }
 
-    // TODO optimize
     fun rollBack(dt: Double) {
         val u = velocity + acceleration * dt
         val c = center - (u * dt - acceleration * dt * dt * 0.5) * 100.0
@@ -253,6 +277,8 @@ class BowlingBall(
         val v2xafter = (m2 * v2.x - m1 * v2.x + 2f * m1 * v1.x) / (m1 + m2)
         return Pair(Vec3d(v1xafter, v1.y, v1.z), Vec3d(v2xafter, v2.y, v2.z))
     }
+
+    override fun toString() = "BowlingBall(\n\t$center\n\t$velocity\n\t$acceleration\n\t$color)"
 }
 
 fun Boolean.toInt() = if (this) 1 else 0

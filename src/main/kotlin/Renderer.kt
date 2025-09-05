@@ -20,11 +20,7 @@ class Renderer(
     private val models: MutableList<BaseModel>,
 ) {
 
-    companion object {
-
-        private val logger = KotlinLogging.logger {}
-    }
-
+    private val logger = KotlinLogging.logger {}
     private val scope = CoroutineScope(Dispatchers.Default)
     private val pixels = IntArray(screenWidth * screenHeight)
 
@@ -105,8 +101,8 @@ class Renderer(
         val isVisible = (trace(shadowRay).first == null)
         val ia = 0.2f
         val kd = 1f //(model.albedo / Math.PI).toFloat()
-                val diffuse = if (isVisible) intensity * kd * max(0.0f, hitPoint.normal.dot(l)) else 0f
-//        val diffuse = (isVisible * intensity * kd * max(0.0f, hitPoint.normal.dot(l)))
+        val diffuse = if (isVisible) intensity * kd * max(0.0f, hitPoint.normal.dot(l)) else 0f
+        //        val diffuse = (isVisible * intensity * kd * max(0.0f, hitPoint.normal.dot(l)))
         val c = model.color * (ia + diffuse)
         return c
     }

@@ -1,5 +1,6 @@
 package org.wocy.model
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import javafx.scene.paint.Color
 import org.wocy.camera.Ray
 import org.wocy.primitive.Vec3d
@@ -7,6 +8,7 @@ import org.wocy.primitive.Vec3f
 import org.wocy.primitive.Vertex
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.min
 
 // 4 x 3 meters
 class Table(
@@ -16,6 +18,7 @@ class Table(
     val borderHeight: Float,
 ) : BaseModel(color, 0.18f, Float.MAX_VALUE, Vec3d()) {
 
+    val logger = KotlinLogging.logger {}
     private val vertices = listOf<Vec3f>(
         // поверхность, по которой катаются шары
         Vec3f(-width / 2f, 0f, length / 2f),
@@ -50,6 +53,7 @@ class Table(
     private val center = Vec3f(0f, borderHeight / 2f, 0f)
     private val radius = max(width / 2f, max(length / 2f, borderHeight / 2f))
     private val radius2 = radius * radius
+    private val hitFactor = -0.95f
 
     // TODO apply dt
     override fun collide(o: BaseModel, dt: Double) {
@@ -59,70 +63,79 @@ class Table(
         if (o.center.x - o.radius <= -width / 2f) {
             if (o.velocity.x < 0f) {
                 o.rollBack(dt)
-                val timeLeft = resolvePenetration(
+                val timeLeft = resolveHorizontalPenetration(
                     o,
                     o.center.x,
                     -width / 2f + o.radius,
                     o.velocity.x,
                     dt,
                 )
-                o.velocity.x *= -1f
+                o.velocity.x *= hitFactor
                 o.rangleOZOX = o.velocity.rangleOZOX()
-//                o.updatePosition(timeLeft)
             }
         } else if (o.center.x + o.radius >= width / 2f) {
             if (o.velocity.x > 0f) {
                 o.rollBack(dt)
-                val timeLeft = resolvePenetration(
+                val timeLeft = resolveHorizontalPenetration(
                     o,
                     o.center.x,
                     width / 2f - o.radius,
                     o.velocity.x,
                     dt,
                 )
-                o.velocity.x *= -1f
+                o.velocity.x *= hitFactor
                 o.rangleOZOX = o.velocity.rangleOZOX()
-//                o.updatePosition(timeLeft)
             }
         }
+
         if (o.center.z - o.radius <= -length / 2f) {
             if (o.velocity.z < 0f) {
                 o.rollBack(dt)
-                val timeLeft = resolvePenetration(
+                val timeLeft = resolveHorizontalPenetration(
                     o,
                     o.center.z,
                     -length / 2f + o.radius,
                     o.velocity.z,
                     dt,
                 )
-                o.velocity.z *= -1f
+                o.velocity.z *= hitFactor
                 o.rangleOZOX = o.velocity.rangleOZOX()
-//                o.updatePosition(timeLeft)
             }
         } else if (o.center.z + o.radius >= length / 2f) {
             if (o.velocity.z > 0f) {
                 o.rollBack(dt)
-                val timeLeft = resolvePenetration(
+                val timeLeft = resolveHorizontalPenetration(
                     o,
                     o.center.z,
                     length / 2f - o.radius,
                     o.velocity.z,
                     dt,
                 )
-                o.velocity.z *= -1f
+                o.velocity.z *= hitFactor
                 o.rangleOZOX = o.velocity.rangleOZOX()
-//                o.updatePosition(timeLeft)
             }
         }
+
         if (o.center.y < o.radius) {
-            o.center.y = o.radius
-            if (o.velocity.y < 0f) {
-                o.velocity.y *= -1f
+            if (o.velocity.y < -Vec3f.EPSILON) {
+                // falling down
+                o.rollBack(dt)
+                /*
+                                if (abs(o.velocity.y) < Vec3d.EPSILON) {
+                                    o.updatePosition(dt)
+                                    o.velocity.y = 0.0
+                                    o.acceleration.y = 0.0
+                                    o.center.y = o.radius
+                                } else {
+                */
+                val timeLeft = resolveVerticalPenetration(o, dt)
+                o.velocity.y *= hitFactor
+                //                }
             }
         }
     }
 
-    private fun resolvePenetration(
+    private fun resolveHorizontalPenetration(
         b: BowlingBall,
         startPos: Float,
         endPos: Float,
@@ -134,6 +147,21 @@ class Table(
             return 0.0
         }
         b.center += b.velocity * dtnew
+        return dt - dtnew
+    }
+
+    private fun resolveVerticalPenetration(o: BowlingBall, dt: Double): Double {
+        assert(o.center.y > o.radius) { "somehow ball is higher than its radius" }
+
+        val d = o.velocity.y * o.velocity.y - 2 * o.acceleration.y * (o.radius - o.center.y)
+        if (d < 0.0) {
+            return 0.0
+        }
+        val dtnew = min((o.velocity.y - d) / o.acceleration.y, (o.velocity.y + d) / o.acceleration.y)
+        if (dtnew <= 0.0) {
+            return 0.0
+        }
+        o.updatePosition(dtnew)
         return dt - dtnew
     }
 

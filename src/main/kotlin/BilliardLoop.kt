@@ -44,7 +44,7 @@ class BilliardLoop(
     val cueLength: Float = 120f
     val models = mutableListOf<BaseModel>(
         BowlingBall(Vec3f(0f, 3.5f, -10f), 3.5f, Color.RED, Vec3d()),
-        BowlingBall(Vec3f(0f, .1f, 10f), .1f, Color.YELLOW, Vec3d()),
+        BowlingBall(Vec3f(0f, 1.5f, 10f), 1.5f, Color.YELLOW, Vec3d()),
         Table(
             Color.GREEN,
             (440f - 2f * cueLength - 2f * 10f),
@@ -68,7 +68,9 @@ class BilliardLoop(
         if (lastTime == 0L) {
             lastTime = now
             camera.apply {
-                move(-80f, 20f, 0f)
+                //                move(0f, 100f, 0f)
+                //                rotateOX(-90f)
+                move(-20f, 8f, 10f)
                 rotateOY(-90f)
             }
             return

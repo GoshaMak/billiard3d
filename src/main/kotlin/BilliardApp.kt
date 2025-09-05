@@ -85,13 +85,13 @@ class BilliardApp : Application() {
 
         canvasPanel.setOnKeyPressed { event ->
             when (event.code) {
-                KeyCode.W, KeyCode.UP       -> loop.camera.moveForward()
-                KeyCode.S, KeyCode.DOWN     -> loop.camera.moveBackward()
-                KeyCode.A, KeyCode.LEFT     -> loop.camera.moveLeft()
-                KeyCode.D, KeyCode.RIGHT    -> loop.camera.moveRight()
-                KeyCode.SPACE               -> loop.camera.moveUpward()
-                KeyCode.CAPS, KeyCode.SHIFT -> loop.camera.moveDownward()
-                else                        -> {}
+                KeyCode.W, KeyCode.UP    -> loop.camera.moveForward()
+                KeyCode.S, KeyCode.DOWN  -> loop.camera.moveBackward()
+                KeyCode.A, KeyCode.LEFT  -> loop.camera.moveLeft()
+                KeyCode.D, KeyCode.RIGHT -> loop.camera.moveRight()
+                KeyCode.SPACE            -> loop.camera.moveUpward()
+                KeyCode.CAPS             -> loop.camera.moveDownward()
+                else                     -> {}
             }
         }
 
